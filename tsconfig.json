@@ -17,7 +17,7 @@
     "noImplicitThis": true,
     "useUnknownInCatchVariables": true,
     "alwaysStrict": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
@@ -26,6 +26,9 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "allowUnusedLabels": false,
-    "allowUnreachableCode": false
-  }
+    "allowUnreachableCode": false,
+  },
+  "include": [
+    "src"
+  ]
 }

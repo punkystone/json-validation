@@ -11,7 +11,7 @@ export const generateTypes = async (
   const schemas = readdirSync(schemaDirectory);
   let out = "";
   for (const schema of schemas) {
-    out += await compileFromFile(schemaDirectory + "/" + schema, {
+    out += await compileFromFile(`${schemaDirectory}/${schema}`, {
       bannerComment: "",
     });
   }
@@ -23,11 +23,11 @@ export const generateValidations = async (
   validationOutFile: string
 ) => {
   const schemas = readdirSync(schemaDirectory).map((file) =>
-    JSON.parse(readFileSync(schemaDirectory + "/" + file).toString())
+    JSON.parse(readFileSync(`${schemaDirectory}/${file}`).toString())
   );
-  const mappings: any = {};
+  const mappings: Record<string, string> = {};
   for (const schema of schemas) {
-    mappings["is" + schema["$id"]] = schema["$id"];
+    mappings[`is${schema.$id}`] = schema.$id;
   }
   const code = standaloneCode(
     new Ajv({
