@@ -3,10 +3,11 @@ import { compileFromFile } from "json-schema-to-typescript";
 import standaloneCode from "ajv/dist/standalone";
 import Ajv from "ajv";
 import { minify } from "terser";
+import type { Schema } from "./types";
 
 export const generateTypes = async (
   schemaDirectory: string,
-  typesOutFile: string
+  typesOutFile: string,
 ): Promise<void> => {
   const schemas = readdirSync(schemaDirectory);
   let out = "";
@@ -20,10 +21,13 @@ export const generateTypes = async (
 
 export const generateValidations = async (
   schemaDirectory: string,
-  validationOutFile: string
-) => {
-  const schemas = readdirSync(schemaDirectory).map((file) =>
-    JSON.parse(readFileSync(`${schemaDirectory}/${file}`).toString())
+  validationOutFile: string,
+): Promise<void> => {
+  const schemas = readdirSync(schemaDirectory).map(
+    (file) =>
+      JSON.parse(
+        readFileSync(`${schemaDirectory}/${file}`).toString(),
+      ) as Schema,
   );
   const mappings: Record<string, string> = {};
   for (const schema of schemas) {
@@ -35,7 +39,7 @@ export const generateValidations = async (
       schemas: schemas,
       code: { source: true, esm: true },
     }),
-    mappings
+    mappings,
   );
 
   writeFileSync(
@@ -47,6 +51,6 @@ export const generateValidations = async (
           passes: 2,
         },
       })
-    ).code as string
+    ).code!,
   );
 };
