@@ -6,51 +6,51 @@ import { minify } from "terser";
 import type { Schema } from "./types";
 
 export const generateTypes = async (
-  schemaDirectory: string,
-  typesOutFile: string,
+    schemaDirectory: string,
+    typesOutFile: string,
 ): Promise<void> => {
-  const schemas = readdirSync(schemaDirectory);
-  let out = "";
-  for (const schema of schemas) {
-    out += await compileFromFile(`${schemaDirectory}/${schema}`, {
-      bannerComment: "",
-    });
-  }
-  writeFileSync(typesOutFile, out);
+    const schemas = readdirSync(schemaDirectory);
+    let out = "";
+    for (const schema of schemas) {
+        out += await compileFromFile(`${schemaDirectory}/${schema}`, {
+            bannerComment: "",
+        });
+    }
+    writeFileSync(typesOutFile, out);
 };
 
 export const generateValidations = async (
-  schemaDirectory: string,
-  validationOutFile: string,
+    schemaDirectory: string,
+    validationOutFile: string,
 ): Promise<void> => {
-  const schemas = readdirSync(schemaDirectory).map(
-    (file) =>
-      JSON.parse(
-        readFileSync(`${schemaDirectory}/${file}`).toString(),
-      ) as Schema,
-  );
-  const mappings: Record<string, string> = {};
-  for (const schema of schemas) {
-    mappings[`is${schema.$id}`] = schema.$id;
-  }
-  const code = standaloneCode(
-    new Ajv({
-      strict: true,
-      schemas: schemas,
-      code: { source: true, esm: true },
-    }),
-    mappings,
-  );
+    const schemas = readdirSync(schemaDirectory).map(
+        (file) =>
+            JSON.parse(
+                readFileSync(`${schemaDirectory}/${file}`).toString(),
+            ) as Schema,
+    );
+    const mappings: Record<string, string> = {};
+    for (const schema of schemas) {
+        mappings[`is${schema.$id}`] = schema.$id;
+    }
+    const code = standaloneCode(
+        new Ajv({
+            strict: true,
+            schemas: schemas,
+            code: { source: true, esm: true },
+        }),
+        mappings,
+    );
 
-  writeFileSync(
-    validationOutFile,
-    (
-      await minify(code, {
-        toplevel: true,
-        compress: {
-          passes: 2,
-        },
-      })
-    ).code!,
-  );
+    writeFileSync(
+        validationOutFile,
+        (
+            await minify(code, {
+                toplevel: true,
+                compress: {
+                    passes: 2,
+                },
+            })
+        ).code!,
+    );
 };
