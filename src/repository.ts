@@ -1,18 +1,18 @@
-import { readdirSync, readFileSync, writeFileSync } from "fs";
-import { compileFromFile } from "json-schema-to-typescript";
-import standaloneCode from "ajv/dist/standalone";
-import Ajv from "ajv";
-import { minify } from "terser";
-import type { Schema } from "./types";
+import { writeFileSync } from "fs";
+import { compile } from "json-schema-to-typescript";
+import type { TSchema } from "@sinclair/typebox";
+import type { JSONSchema4 } from "json-schema";
+import { TypeCompiler } from "@sinclair/typebox/compiler";
+import * as esbuild from "esbuild";
 
 export const generateTypes = async (
-    schemaDirectory: string,
+    schemas: TSchema[],
     typesOutFile: string,
 ): Promise<void> => {
-    const schemas = readdirSync(schemaDirectory);
     let out = "";
     for (const schema of schemas) {
-        out += await compileFromFile(`${schemaDirectory}/${schema}`, {
+        const jsonSchema = schema as unknown as JSONSchema4;
+        out += await compile(jsonSchema, "", {
             bannerComment: "",
         });
     }
@@ -20,37 +20,21 @@ export const generateTypes = async (
 };
 
 export const generateValidations = async (
-    schemaDirectory: string,
+    schemas: TSchema[],
     validationOutFile: string,
 ): Promise<void> => {
-    const schemas = readdirSync(schemaDirectory).map(
-        (file) =>
-            JSON.parse(
-                readFileSync(`${schemaDirectory}/${file}`).toString(),
-            ) as Schema,
-    );
-    const mappings: Record<string, string> = {};
+    let code = "";
     for (const schema of schemas) {
-        mappings[`is${schema.$id}`] = schema.$id;
+        let func = TypeCompiler.Code(schema);
+        func = code.replace(/return(?= function check\(value\) \{)/, `export`);
+        func = code.replace(
+            /(?<=export function )check(?=\(value\) \{)/,
+            `Is${schema.title ?? ""}`,
+        );
+        code += func;
     }
-    const code = standaloneCode(
-        new Ajv({
-            strict: true,
-            schemas: schemas,
-            code: { source: true, esm: true },
-        }),
-        mappings,
-    );
-
-    writeFileSync(
-        validationOutFile,
-        (
-            await minify(code, {
-                toplevel: true,
-                compress: {
-                    passes: 2,
-                },
-            })
-        ).code!,
-    );
+    const minifiedCode = await esbuild.transform(code, {
+        minify: true,
+    });
+    writeFileSync(validationOutFile, minifiedCode.code);
 };

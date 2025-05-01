@@ -1,5 +1,7 @@
+import type { TSchema } from "@sinclair/typebox";
+
 export declare interface ValidationOptions {
-    readonly schemaDirectory: string;
+    readonly schemas: TSchema[];
     readonly typesOutFile: string;
     readonly validationOutFile: string;
 }

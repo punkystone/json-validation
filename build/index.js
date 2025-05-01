@@ -1,1 +1,62 @@
-"use strict";var u=Object.create;var n=Object.defineProperty;var h=Object.getOwnPropertyDescriptor;var v=Object.getOwnPropertyNames;var S=Object.getPrototypeOf,$=Object.prototype.hasOwnProperty;var w=(e,t)=>{for(var o in t)n(e,o,{get:t[o],enumerable:!0})},m=(e,t,o,r)=>{if(t&&typeof t=="object"||typeof t=="function")for(let i of v(t))!$.call(e,i)&&i!==o&&n(e,i,{get:()=>t[i],enumerable:!(r=h(t,i))||r.enumerable});return e};var c=(e,t,o)=>(o=e!=null?u(S(e)):{},m(t||!e||!e.__esModule?n(o,"default",{value:e,enumerable:!0}):o,e)),F=e=>m(n({},"__esModule",{value:!0}),e);var V={};w(V,{validation:()=>O});module.exports=F(V);var s=require("fs"),p=require("json-schema-to-typescript"),d=c(require("ajv/dist/standalone")),l=c(require("ajv")),f=require("terser"),y=async(e,t)=>{let o=(0,s.readdirSync)(e),r="";for(let i of o)r+=await(0,p.compileFromFile)(`${e}/${i}`,{bannerComment:""});(0,s.writeFileSync)(t,r)},g=async(e,t)=>{let o=(0,s.readdirSync)(e).map(a=>JSON.parse((0,s.readFileSync)(`${e}/${a}`).toString())),r={};for(let a of o)r[`is${a.$id}`]=a.$id;let i=(0,d.default)(new l.default({strict:!0,schemas:o,code:{source:!0,esm:!0}}),r);(0,s.writeFileSync)(t,(await(0,f.minify)(i,{toplevel:!0,compress:{passes:2}})).code)};var O=async e=>{await y(e.schemaDirectory,e.typesOutFile),await g(e.schemaDirectory,e.validationOutFile)};0&&(module.exports={validation});
+"use strict";
+var h = Object.create;
+var r = Object.defineProperty;
+var u = Object.getOwnPropertyDescriptor;
+var y = Object.getOwnPropertyNames;
+var S = Object.getPrototypeOf,
+    v = Object.prototype.hasOwnProperty;
+var g = (e, t) => {
+        for (var o in t) r(e, o, { get: t[o], enumerable: !0 });
+    },
+    s = (e, t, o, i) => {
+        if ((t && typeof t == "object") || typeof t == "function")
+            for (let a of y(t))
+                !v.call(e, a) &&
+                    a !== o &&
+                    r(e, a, {
+                        get: () => t[a],
+                        enumerable: !(i = u(t, a)) || i.enumerable,
+                    });
+        return e;
+    };
+var w = (e, t, o) => (
+        (o = e != null ? h(S(e)) : {}),
+        s(
+            t || !e || !e.__esModule
+                ? r(o, "default", { value: e, enumerable: !0 })
+                : o,
+            e,
+        )
+    ),
+    x = (e) => s(r({}, "__esModule", { value: !0 }), e);
+var T = {};
+g(T, { validation: () => O });
+module.exports = x(T);
+var m = require("fs"),
+    c = require("json-schema-to-typescript"),
+    p = require("@sinclair/typebox/compiler"),
+    l = w(require("esbuild")),
+    f = async (e, t) => {
+        let o = "";
+        for (let i of e)
+            o += await (0, c.compile)(i, "", { bannerComment: "" });
+        (0, m.writeFileSync)(t, o);
+    },
+    d = async (e, t) => {
+        let o = "";
+        for (let a of e) {
+            let n = p.TypeCompiler.Code(a);
+            (n = o.replace(/return(?= function check\(value\) \{)/, "export")),
+                (n = o.replace(
+                    /(?<=export function )check(?=\(value\) \{)/,
+                    `Is${a.title ?? ""}`,
+                )),
+                (o += n);
+        }
+        let i = await l.transform(o, { minify: !0 });
+        (0, m.writeFileSync)(t, i.code);
+    };
+var O = async (e) => {
+    await f(e.schemas, e.typesOutFile), await d(e.schemas, e.validationOutFile);
+};
+0 && (module.exports = { validation });
