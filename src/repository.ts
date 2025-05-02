@@ -29,7 +29,7 @@ export const generateValidations = async (
         func = func.replace(/return(?= function check\(value\) \{)/, `export`);
         func = func.replace(
             /(?<=export function )check(?=\(value\) \{)/,
-            `Is${schema.title ?? ""}`,
+            `is${schema.title ?? ""}`,
         );
         code += func;
     }
