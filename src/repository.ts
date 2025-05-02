@@ -26,8 +26,8 @@ export const generateValidations = async (
     let code = "";
     for (const schema of schemas) {
         let func = TypeCompiler.Code(schema);
-        func = code.replace(/return(?= function check\(value\) \{)/, `export`);
-        func = code.replace(
+        func = func.replace(/return(?= function check\(value\) \{)/, `export`);
+        func = func.replace(
             /(?<=export function )check(?=\(value\) \{)/,
             `Is${schema.title ?? ""}`,
         );
