@@ -35,6 +35,7 @@ export const generateValidations = async (
     }
     const minifiedCode = await esbuild.transform(code, {
         minify: true,
+        banner: '"use strict";',
     });
     writeFileSync(validationOutFile, minifiedCode.code);
 };
